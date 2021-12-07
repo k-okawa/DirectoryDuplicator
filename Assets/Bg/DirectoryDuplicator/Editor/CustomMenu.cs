@@ -16,6 +16,7 @@ namespace Bg.DirectoryDuplicator.Editor {
                 EditorUtility.DisplayDialog(DIALOG_TITLE, "Please select a directory", "OK", "");
             }
             string directoryPath = AssetDatabase.GetAssetPath(selectedAsset.First());
+            directoryPath = Path.GetFullPath(directoryPath);
             if (!Directory.Exists(directoryPath)) {
                 EditorUtility.DisplayDialog(DIALOG_TITLE, "Please select a directory", "OK", "");
             }
