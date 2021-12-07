@@ -9,19 +9,19 @@ using UnityEngine;
 
 namespace Bg.DirectoryDuplicator.Editor {
     public static class DirectoryDuplicator {
-        public static void CopyDirectoryWithDependencies(string originDirectory, string targetDirectory) {
+        public static void CopyDirectoryWithDependencies(string originDirectory, string targetDirectory, string[] copyExcludeDirectories = null) {
             if (!Directory.Exists(originDirectory)) {
                 return;
             }
             
-            CopyDirectory(originDirectory, targetDirectory);
+            CopyDirectory(originDirectory, targetDirectory, copyExcludeDirectories);
             AssetDatabase.Refresh();
 
             ChangeGuidToNewFile(originDirectory, targetDirectory);
             AssetDatabase.Refresh();
         }
         
-        public static void CopyDirectory(string originDirectory, string targetDirectory) {
+        private static void CopyDirectory(string originDirectory, string targetDirectory, string[] copyExcludeDirectories = null) {
             DirectoryInfo directoryInfo = new DirectoryInfo(originDirectory);
             if (!directoryInfo.Exists) {
                 return;
@@ -34,6 +34,9 @@ namespace Bg.DirectoryDuplicator.Editor {
             FileInfo[] files = directoryInfo.GetFiles("*", SearchOption.AllDirectories);
             foreach (var fileInfo in files) {
                 if (fileInfo.Extension == ".meta") {
+                    continue;
+                }
+                if (copyExcludeDirectories != null && copyExcludeDirectories.Any(itr => fileInfo.FullName.Contains(itr))) {
                     continue;
                 }
                 string tempDir = fileInfo.DirectoryName.Replace(originDirectory, targetDirectory);
@@ -64,7 +67,10 @@ namespace Bg.DirectoryDuplicator.Editor {
                 }
                 string originGuid = AssetDatabase.GUIDFromAssetPath(GetRelativePath(originPath)).ToString();
                 string newGuid = AssetDatabase.GUIDFromAssetPath(GetRelativePath(newMetaPath)).ToString();
-
+                if (string.IsNullOrEmpty(newGuid)) {
+                    continue;
+                }
+                
                 ret[originGuid] = newGuid;
             }
 
