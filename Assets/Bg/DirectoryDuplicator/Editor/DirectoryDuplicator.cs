@@ -72,11 +72,11 @@ namespace Bg.DirectoryDuplicator.Editor {
         }
 
         private static string GetRelativePath(string path) {
-            string ret = path.Replace(Application.dataPath, "");
+            string dataPathRoot = Directory.GetParent(Application.dataPath).FullName;
+            string ret = path.Replace(dataPathRoot, "");
             if (ret.StartsWith(Path.DirectorySeparatorChar.ToString())) {
                 ret = ret.Remove(0, 1);
             }
-            ret = "Assets/" + ret;
             return ret;
         }
 
