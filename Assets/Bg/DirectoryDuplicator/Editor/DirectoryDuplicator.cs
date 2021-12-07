@@ -143,8 +143,8 @@ namespace Bg.DirectoryDuplicator.Editor {
 
             sb.Replace("...\n", "");
 
-            var originReg = new Regex("&[0-9]+");
-            var targetReg = new Regex(".*&[0-9]+");
+            var originReg = new Regex("&[-,0-9]+");
+            var targetReg = new Regex(".*&[-,0-9]+");
             var matches = targetReg.Matches(sb.ToString());
             var matchLines = new List<string>();
             for (int i = 0; i < matches.Count; i++) {
