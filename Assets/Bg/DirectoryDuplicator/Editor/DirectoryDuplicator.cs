@@ -18,6 +18,7 @@ namespace Bg.DirectoryDuplicator.Editor {
             AssetDatabase.Refresh();
 
             ChangeGuidToNewFile(originDirectory, targetDirectory);
+            AssetDatabase.Refresh();
         }
         
         public static void CopyDirectory(string originDirectory, string targetDirectory) {
@@ -139,32 +140,33 @@ namespace Bg.DirectoryDuplicator.Editor {
         }
 
         private static string ArrangeYaml(string originPath, string newPath) {
-            StringBuilder sb = new StringBuilder(File.ReadAllText(newPath));
-
-            sb.Replace("...\n", "");
-
-            var originReg = new Regex("&[-,0-9]+");
-            var targetReg = new Regex(".*&[-,0-9]+");
-            var matches = targetReg.Matches(sb.ToString());
-            var matchLines = new List<string>();
-            for (int i = 0; i < matches.Count; i++) {
-                matchLines.Add(matches[i].Value);
-            }
-
-            StringReader sr = new StringReader(File.ReadAllText(originPath));
-            while (sr.Peek() > -1) {
-                string line = sr.ReadLine();
-                if (line != null && line.StartsWith("---")) {
-                    var idMatch = originReg.Match(line);
-                    var targetMatch = matchLines.FirstOrDefault(itr => itr.Contains(idMatch.Value));
-                    if (targetMatch != null) sb.Replace(targetMatch, line);
-                }
-            }
-
+            StringBuilder sb = new StringBuilder();
             string header = @"%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 ";
-            sb.Insert(0, header);
+            sb.Append(header);
+
+            StringReader originString = new StringReader(File.ReadAllText(originPath));
+            StringReader newString = new StringReader(File.ReadAllText(newPath));
+
+            Queue<string> originDivList = new Queue<string>();
+            while (originString.Peek() > -1) {
+                string line = originString.ReadLine();
+                if (line.StartsWith("---")) {
+                    originDivList.Enqueue(line);
+                }
+            }
+
+            var reg = new Regex(".*&-{0,1}[0-9]+");
+            while (newString.Peek() > -1) {
+                string line = newString.ReadLine();
+                if (line.StartsWith("...")) continue;
+                if (reg.IsMatch(line)) {
+                    sb.AppendLine(originDivList.Dequeue());
+                } else {
+                    sb.AppendLine(line);
+                }
+            }
 
             return sb.ToString();
         }
