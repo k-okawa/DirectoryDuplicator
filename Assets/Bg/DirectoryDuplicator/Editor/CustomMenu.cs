@@ -15,15 +15,18 @@ namespace Bg.DirectoryDuplicator.Editor {
             if (selectedAsset.Length != 1) {
                 EditorUtility.DisplayDialog(DIALOG_TITLE, "Please select a directory", "OK", "");
             }
-            string path = AssetDatabase.GetAssetPath(selectedAsset.First());
-            if (!Directory.Exists(path)) {
+            string directoryPath = AssetDatabase.GetAssetPath(selectedAsset.First());
+            if (!Directory.Exists(directoryPath)) {
                 EditorUtility.DisplayDialog(DIALOG_TITLE, "Please select a directory", "OK", "");
             }
 
-            var allFilePaths = Directory.GetFiles(path, "*", SearchOption.AllDirectories)
-                .Where(itr => Path.GetExtension(itr) != ".meta").ToList();
+            string newDirectoryPath = directoryPath + "(copy)";
+            int count = 1;
+            while (Directory.Exists(newDirectoryPath)) {
+                newDirectoryPath = directoryPath + $"(copy{count})";
+            }
             
-            
+            DirectoryDuplicator.CopyDirectoryWithDependencies(directoryPath, newDirectoryPath);
         }
 
         [MenuItem("Assets/Bg/TestYaml")]
