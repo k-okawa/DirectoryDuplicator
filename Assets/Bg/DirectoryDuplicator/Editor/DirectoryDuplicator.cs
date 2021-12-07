@@ -102,7 +102,7 @@ namespace Bg.DirectoryDuplicator.Editor {
                 var yaml = LoadYaml(path);
                 foreach (var doc in yaml.Documents) {
                     var root = doc.RootNode;
-                    ChangeGuidToNewFileRecursively(path, string.Empty, root, guidMap);
+                    ChangeGuidToNewFileRecursively(string.Empty, root, guidMap);
                 }
                 StreamWriter sw = new StreamWriter(path);
                 yaml.Save(sw, false);
@@ -111,19 +111,19 @@ namespace Bg.DirectoryDuplicator.Editor {
             }
         }
 
-        private static void ChangeGuidToNewFileRecursively(string path, string nodeKey, YamlNode node, Dictionary<string, string> guidMap) {
+        private static void ChangeGuidToNewFileRecursively(string nodeKey, YamlNode node, Dictionary<string, string> guidMap) {
             switch (node.NodeType) {
                 case YamlNodeType.Mapping: {
                     var mappingNode = node as YamlMappingNode;
                     foreach (var entry in mappingNode.Children) {
-                        ChangeGuidToNewFileRecursively(path, ((YamlScalarNode)entry.Key).Value, entry.Value, guidMap);
+                        ChangeGuidToNewFileRecursively(((YamlScalarNode)entry.Key).Value, entry.Value, guidMap);
                     }
                     break;
                 }
                 case YamlNodeType.Sequence: {
                     var seqNode = node as YamlSequenceNode;
                     foreach (var yamlNode in seqNode.Children) {
-                        ChangeGuidToNewFileRecursively(path, string.Empty, yamlNode, guidMap);
+                        ChangeGuidToNewFileRecursively(string.Empty, yamlNode, guidMap);
                     }
                     break;
                 }
