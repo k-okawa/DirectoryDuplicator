@@ -52,6 +52,8 @@ That's all.
 
 ## Utility functions
 
+[DirectoryDuplicator.cs](https://github.com/k-okawa/DirectoryDuplicator/blob/master/Assets/Bg/DirectoryDuplicator/Editor/DirectoryDuplicator.cs)
+
 If you need to create custom editor use this package function, you can use utility functions.
 
 ```c#
