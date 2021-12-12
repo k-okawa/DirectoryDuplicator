@@ -9,6 +9,12 @@ using UnityEngine;
 
 namespace Bg.DirectoryDuplicator.Editor {
     public static class DirectoryDuplicator {
+        /// <summary>
+        /// Copy directory and change guid dependencies in target directory
+        /// </summary>
+        /// <param name="originDirectory">original directory absolute path</param>
+        /// <param name="targetDirectory">copy destination directory absolute path</param>
+        /// <param name="copyExcludeDirectories">exclude sub directories that included in origin directory from copy</param>
         public static void CopyDirectoryWithDependencies(string originDirectory, string targetDirectory, string[] copyExcludeDirectories = null) {
             if (!Directory.Exists(originDirectory)) {
                 return;
@@ -21,7 +27,13 @@ namespace Bg.DirectoryDuplicator.Editor {
             AssetDatabase.Refresh();
         }
         
-        private static void CopyDirectory(string originDirectory, string targetDirectory, string[] copyExcludeDirectories = null) {
+        /// <summary>
+        /// Copy directory(sub directories included)
+        /// </summary>
+        /// <param name="originDirectory">original directory absolute path</param>
+        /// <param name="targetDirectory">copy destination directory absolute path</param>
+        /// <param name="copyExcludeDirectories">exclude sub directories that included in origin directory from copy</param>
+        public static void CopyDirectory(string originDirectory, string targetDirectory, string[] copyExcludeDirectories = null) {
             DirectoryInfo directoryInfo = new DirectoryInfo(originDirectory);
             if (!directoryInfo.Exists) {
                 return;
@@ -43,6 +55,35 @@ namespace Bg.DirectoryDuplicator.Editor {
                 string tempPath = Path.Combine(tempDir, fileInfo.Name);
                 CreateDirectoryIfNotExist(tempPath);
                 AssetDatabase.CopyAsset(GetRelativePath(fileInfo.FullName), GetRelativePath(tempPath));
+            }
+        }
+        
+        /// <summary>
+        /// Change guid dependencies in target directory
+        /// </summary>
+        /// <param name="originDirectory">original directory absolute path</param>
+        /// <param name="targetDirectory">copy destination directory absolute path</param>
+        public static void ChangeGuidToNewFile(string originDirectory, string targetDirectory) {
+            var guidMap = CreateGuidMap(originDirectory, targetDirectory);
+            var targetExt = new string[] {
+                ".anim",".controller",".overrideController",".prefab",".mat",".material",".playable",".asset",".unity"
+            };
+            
+            var newAssetPaths = Directory.GetFiles(targetDirectory, "*", SearchOption.AllDirectories).Where(itr => !itr.EndsWith(".meta")).ToList();
+            foreach (var path in newAssetPaths) {
+                if (targetExt.All(itr => !path.Contains(itr))) {
+                    continue;
+                }
+
+                var yaml = LoadYaml(path);
+                foreach (var doc in yaml.Documents) {
+                    var root = doc.RootNode;
+                    ChangeGuidToNewFileRecursively(string.Empty, root, guidMap);
+                }
+                StreamWriter sw = new StreamWriter(path);
+                yaml.Save(sw, false);
+                sw.Close();
+                File.WriteAllText(path, ArrangeYaml(path.Replace(targetDirectory, originDirectory), path));
             }
         }
 
@@ -91,30 +132,6 @@ namespace Bg.DirectoryDuplicator.Editor {
             var yaml = new YamlStream();
             yaml.Load(input);
             return yaml;
-        }
-
-        private static void ChangeGuidToNewFile(string originDirectory, string targetDirectory) {
-            var guidMap = CreateGuidMap(originDirectory, targetDirectory);
-            var targetExt = new string[] {
-                ".anim",".controller",".overrideController",".prefab",".mat",".material",".playable",".asset",".unity"
-            };
-            
-            var newAssetPaths = Directory.GetFiles(targetDirectory, "*", SearchOption.AllDirectories).Where(itr => !itr.EndsWith(".meta")).ToList();
-            foreach (var path in newAssetPaths) {
-                if (targetExt.All(itr => !path.Contains(itr))) {
-                    continue;
-                }
-
-                var yaml = LoadYaml(path);
-                foreach (var doc in yaml.Documents) {
-                    var root = doc.RootNode;
-                    ChangeGuidToNewFileRecursively(string.Empty, root, guidMap);
-                }
-                StreamWriter sw = new StreamWriter(path);
-                yaml.Save(sw, false);
-                sw.Close();
-                File.WriteAllText(path, ArrangeYaml(path.Replace(targetDirectory, originDirectory), path));
-            }
         }
 
         private static void ChangeGuidToNewFileRecursively(string nodeKey, YamlNode node, Dictionary<string, string> guidMap) {
