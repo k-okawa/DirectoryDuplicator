@@ -179,12 +179,13 @@ namespace Bg.DirectoryDuplicator.Editor {
                     originDivList.Enqueue(line);
                 }
             }
-
-            var reg = new Regex(".*&-{0,1}[0-9]+");
+            
+            sb.AppendLine(originDivList.Dequeue());
+            
             while (newString.Peek() > -1) {
                 string line = newString.ReadLine();
                 if (line.StartsWith("...")) continue;
-                if (reg.IsMatch(line)) {
+                if (line.StartsWith("---")) {
                     sb.AppendLine(originDivList.Dequeue());
                 } else {
                     sb.AppendLine(line);
