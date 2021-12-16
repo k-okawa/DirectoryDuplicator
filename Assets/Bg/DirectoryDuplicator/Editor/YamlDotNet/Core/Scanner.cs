@@ -824,6 +824,11 @@ namespace Bg.DirectoryDuplicator.YamlDotNet.Core
 
             if (isStartToken)
             {
+                // for unity yaml format
+                while (!analyzer.Check("\n")) 
+                {
+                    Skip();
+                }
                 tokens.Enqueue(new DocumentStart(start, cursor.Mark()));
             }
             else
