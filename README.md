@@ -65,7 +65,8 @@ If you need to create custom editor use this package function, you can use utili
 /// <param name="originDirectory">original directory absolute path</param>
 /// <param name="targetDirectory">copy destination directory absolute path</param>
 /// <param name="copyExcludeDirectories">exclude sub directories that included in origin directory from copy</param>
-public static void CopyDirectoryWithDependencies(string originDirectory, string targetDirectory, string[] copyExcludeDirectories = null);
+/// <param name="progressCallback">callback of progress. returns progress and total count of file count</param>
+public static void CopyDirectoryWithDependencies(string originDirectory, string targetDirectory, string[] copyExcludeDirectories = null, Action<(int progress, int total)> progressCallback = null);
 
 /// <summary>
 /// Copy directory(sub directories included)
@@ -80,7 +81,8 @@ public static void CopyDirectory(string originDirectory, string targetDirectory,
 /// </summary>
 /// <param name="originDirectory">original directory absolute path</param>
 /// <param name="targetDirectory">copy destination directory absolute path</param>
-public static void ChangeGuidToNewFile(string originDirectory, string targetDirectory);
+/// <param name="progressCallback">callback of progress. returns progress and total count of file count</param>
+public static void ChangeGuidToNewFile(string originDirectory, string targetDirectory, Action<(int progress, int total)> progressCallback = null);
 ```
 
 ## Supported asset file types
