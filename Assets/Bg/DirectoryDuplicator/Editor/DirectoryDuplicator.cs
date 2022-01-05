@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Bg.DirectoryDuplicator.YamlDotNet.RepresentationModel;
 using UnityEditor;
 using UnityEngine;
@@ -15,15 +17,16 @@ namespace Bg.DirectoryDuplicator.Editor {
         /// <param name="originDirectory">original directory absolute path</param>
         /// <param name="targetDirectory">copy destination directory absolute path</param>
         /// <param name="copyExcludeDirectories">exclude sub directories that included in origin directory from copy</param>
-        public static void CopyDirectoryWithDependencies(string originDirectory, string targetDirectory, string[] copyExcludeDirectories = null) {
+        /// <param name="progressCallback">callback of progress. returns progress and total count of file count</param>
+        public static async Task CopyDirectoryWithDependencies(string originDirectory, string targetDirectory, string[] copyExcludeDirectories = null, Action<(int progress, int total)> progressCallback = null) {
             if (!Directory.Exists(originDirectory)) {
                 return;
             }
             
             CopyDirectory(originDirectory, targetDirectory, copyExcludeDirectories);
             AssetDatabase.Refresh();
-
-            ChangeGuidToNewFile(originDirectory, targetDirectory);
+            
+            await ChangeGuidToNewFile(originDirectory, targetDirectory, progressCallback);
             AssetDatabase.Refresh();
         }
         
@@ -63,28 +66,47 @@ namespace Bg.DirectoryDuplicator.Editor {
         /// </summary>
         /// <param name="originDirectory">original directory absolute path</param>
         /// <param name="targetDirectory">copy destination directory absolute path</param>
-        public static void ChangeGuidToNewFile(string originDirectory, string targetDirectory) {
+        /// <param name="progressCallback">callback of progress. returns progress and total count of file count</param>
+        public static async Task ChangeGuidToNewFile(string originDirectory, string targetDirectory, Action<(int progress, int total)> progressCallback = null) {
             var guidMap = CreateGuidMap(originDirectory, targetDirectory);
             var targetExt = new string[] {
                 ".anim",".controller",".overrideController",".prefab",".mat",".material",".playable",".asset",".unity"
             };
-            
+
+            List<Task> taskList = new List<Task>();
             var newAssetPaths = Directory.GetFiles(targetDirectory, "*", SearchOption.AllDirectories).Where(itr => !itr.EndsWith(".meta")).ToList();
+            
+            var context = SynchronizationContext.Current;
+            object lockObj = new object();
+            int total = newAssetPaths.Count();
+            int progress = 0;
+
             foreach (var path in newAssetPaths) {
                 if (targetExt.All(itr => !path.Contains(itr))) {
                     continue;
                 }
 
-                var yaml = LoadYaml(path);
-                foreach (var doc in yaml.Documents) {
-                    var root = doc.RootNode;
-                    ChangeGuidToNewFileRecursively(string.Empty, root, guidMap);
-                }
-                StreamWriter sw = new StreamWriter(path);
-                yaml.Save(sw, false);
-                sw.Close();
-                File.WriteAllText(path, ArrangeYaml(path.Replace(targetDirectory, originDirectory), path));
+                var task = Task.Run(() => {
+                    var yaml = LoadYaml(path);
+                    foreach (var doc in yaml.Documents) {
+                        var root = doc.RootNode;
+                        ChangeGuidToNewFileRecursively(string.Empty, root, guidMap);
+                    }
+                    StreamWriter sw = new StreamWriter(path);
+                    yaml.Save(sw, false);
+                    sw.Close();
+                    File.WriteAllText(path, ArrangeYaml(path.Replace(targetDirectory, originDirectory), path));
+                    context.Post(_ => {
+                        lock (lockObj) {
+                            progress++;
+                            progressCallback?.Invoke((progress, total));
+                        }
+                    }, null);
+                });
+                taskList.Add(task);
             }
+
+            await Task.WhenAll(taskList);
         }
 
         private static void CreateDirectoryIfNotExist(string filePath) {
