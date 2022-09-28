@@ -2,6 +2,7 @@
   "name": "com.bg.directoryduplicator",
   "displayName": "DirectoryDuplicator",
   "version": "1.0.3",
+  "unity": "2020.3",
   "author": {
     "name": "KyoheiOkawa"
   }
