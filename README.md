@@ -29,6 +29,9 @@ sprite field of image component in Original(copy)/image.prefab refer Original/sp
 
 This is inconvenient for asset template directory.
 
+## Supported UnityVersion
+2020.3 or highter
+
 ## Installation
 
 ### Install via git url
