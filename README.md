@@ -30,7 +30,7 @@ sprite field of image component in Original(copy)/image.prefab refer Original/sp
 This is inconvenient for asset template directory.
 
 ## Supported UnityVersion
-2020.2 or highter
+2020.2 or higher
 
 ## Installation
 
