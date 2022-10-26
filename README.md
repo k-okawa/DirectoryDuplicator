@@ -1,7 +1,7 @@
 # DirectoryDuplicator
 [[日本語](https://qiita.com/KyoheiOkawa/items/b53ba29a29436078b9d8)]
 
-[![openupm](https://img.shields.io/npm/v/com.littlebigfun.addressable-importer?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.littlebigfun.addressable-importer/)
+[![openupm](https://img.shields.io/npm/v/com.bg.directoryduplicator?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.bg.directoryduplicator/)
 
 This package is possible to duplicate files in directory with guid dependencies.
 
